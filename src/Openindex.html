@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>开屏页</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        .splash {
+            width: 100vw;
+            height: 100vh;
+            background: #fff;
+            save: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+        /* 禁止图片保存 */
+        img {
+            pointer-events: none; 
+            user-select: none;
+            -webkit-user-drag: none;
+        }
+        .splash img {
+            width: 70px;
+            height: auto;
+            object-fit: contain;
+        }
+        .splash .title {
+            margin-top: 20px;
+            font-size: 16px;
+            color: #333;
+            font-family: "Microsoft YaHei", sans-serif;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body oncontextmenu="return false">
+    <div class="splash">
+        <img src="icon.png" alt="logo">
+        <div class="title">收藏网站库</div>
+    </div>
+
+    <script>
+        setTimeout(() => {
+            window.location.href = "index.html";
+        }, 1000);
+    </script>
+</body>
+</html>
