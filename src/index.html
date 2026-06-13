@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>网址收藏库</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            font-family: system-ui, -apple-system, sans-serif;
+            transition: all 0.22s ease;
+        }
+        img {
+            -webkit-user-drag: none;
+            user-select: none;
+            pointer-events: auto;
+        }
+        :root {
+            --bg: #f5f6f8;
+            --card: #ffffff;
+            --text: #1a1a1a;
+            --text2: #666;
+            --border: #d1d5db;
+            --primary: #007aff;
+            --mask: rgba(0,0,0,0.4);
+        }
+        html[data-theme="dark"] {
+            --bg: #121212;
+            --card: #1e1e1e;
+            --text: #f0f0f0;
+            --text2: #bbbbbb;
+            --border: #333;
+            --mask: rgba(0,0,0.7);
+        }
+        @media (prefers-color-scheme: dark) {
+            html[data-theme="auto"] {
+                --bg: #121212;
+                --card: #1e1e1e;
+                --text: #f0f0f0;
+                --text2: #bbbbbb;
+                --border: #333;
+                --mask: rgba(0,0,0.7);
+            }
+        }
+        body {
+            background: var(--bg);
+            color: var(--text);
+            height: 100vh;
+            overflow: hidden;
+        }
+        .mask-layer {
+            position: fixed;
+            inset: 0;
+            background: var(--mask);
+            z-index: 99;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease;
+        }
+        .mask-layer:not(.hidden) {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .add-site-pop,
+        .edit-site-pop,
+        .del-site-pop,
+        .theme-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.92);
+            width: 90%;
+            max-width: 360px;
+            background: var(--card);
+            border-radius: 20px;
+            padding: 26px;
+            z-index: 100;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            pointer-events: none;
+            opacity: 0;
+            transition: all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        .add-site-pop.show,
+        .edit-site-pop.show,
+        .del-site-pop.show,
+        .theme-popup.show {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .pop-title {
+            font-size: 20px;
+            color: var(--text);
+            text-align: center;
+            margin-bottom: 24px;
+            font-weight: 500;
+        }
+        .input-box {
+            width: 100%;
+            height: 48px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 0 16px;
+            font-size: 15px;
+            outline: none;
+            margin-bottom: 16px;
+            color: var(--text);
+        }
+        .input-box:focus {
+            border-color: var(--primary);
+        }
+        .btn-group {
+            display: flex;
+            gap: 14px;
+            margin-top: 10px;
+        }
+        .base-btn {
+            flex: 1;
+            height: 46px;
+            border-radius: 12px;
+            border: none;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.22s ease;
+        }
+        .base-btn:active {
+            transform: scale(0.95);
+        }
+        .btn-blue { background: var(--primary); color: #fff; }
+        .btn-red { background: #ff3b30; color: #fff; }
+        .btn-gray { background: #e5e6eb; color: var(--text); }
+        .theme-option {
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            font-size: 16px;
+            background: var(--bg);
+            color: var(--text);
+            cursor: pointer;
+            transition: all 0.22s ease;
+        }
+        .theme-option:active {
+            transform: scale(0.97);
+            background: var(--primary);
+            color: #fff;
+        }
+        .theme-close {
+            margin-top: 10px;
+            padding: 14px;
+            border-radius: 12px;
+            background: #e5e6eb;
+            color: #333;
+            text-align: center;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.22s ease;
+        }
+        .pwd-page { position: fixed; inset: 0; background: var(--bg); z-index: 100; display: flex; justify-content: center; align-items: flex-start; padding-top: 20px; }
+        .pwd-card { width: 90%; max-width: 420px; background: var(--card); border-radius: 20px; padding: 40px 30px; box-shadow: 0 8px 30px rgba(0,0,0,0.12); }
+        .pwd-title { font-size: 22px; color: var(--text); text-align: center; margin-bottom: 35px; font-weight: 500; }
+        .pwd-input { width: 100%; height: 54px; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 0 15px; font-size: 16px; outline: none; margin-bottom: 30px; color: var(--text); }
+        .pwd-input:focus { border-color: var(--primary); }
+        .pwd-btn-group { display: flex; gap: 16px; }
+        .pwd-btn { flex: 1; height: 50px; border-radius: 12px; border: none; font-size: 16px; cursor: pointer; transition: all 0.22s ease; }
+        .pwd-btn:active { transform: scale(0.96); }
+        .pwd-btn-blue { background: var(--primary); color: #fff; }
+        .pwd-btn-gray { background: #e5e6eb; color: var(--text); }
+        .main-page { position: fixed; inset: 0; background: var(--bg); display: none; z-index: 10; }
+        .nav-bar {
+            height: 50px;
+            background: var(--card);
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+            position: relative;
+        }
+        .nav-normal {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            width: 100%;
+        }
+        .icon-btn {
+            width: 46px;
+            height: 46px;
+            border: none;
+            background: transparent;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.22s ease;
+        }
+        .icon-btn:active { background: #f0f1f3; transform: scale(0.92); }
+        .icon-btn img { width: 23px; height: 23px; }
+        .search-ellipse {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: calc(100% - 20px);
+            height: 44px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            display: none;
+            align-items: center;
+            gap: 8px;
+            padding: 0 12px;
+            z-index: 30;
+        }
+        .search-ellipse.show {
+            display: flex;
+        }
+        .search-icon {
+            width: 34px;
+            height: 34px;
+            border: none;
+            background: transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .search-icon img {
+            width: 22px;
+            height: 22px;
+        }
+        .search-input {
+            flex: 1;
+            height: 34px;
+            border: none;
+            outline: none;
+            background: transparent;
+            color: var(--text);
+            font-size: 15px;
+        }
+        .search-close {
+            width: 34px;
+            height: 34px;
+            border: none;
+            background: transparent;
+            font-size: 18px;
+            color: var(--text);
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .search-close:active {
+            background: var(--border);
+        }
+        .collect-area {
+            padding: 18px;
+            height: calc(100vh - 50px);
+            overflow-y: auto;
+        }
+        .site-item {
+            width: 100%;
+            background: var(--card);
+            border-radius: 14px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            transition: all 0.22s ease;
+        }
+        .site-item:active { transform: scale(0.98); }
+        .site-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 0;
+            object-fit: cover;
+            flex-shrink: 0;
+            transition: all 0.22s ease;
+        }
+        .text-scroll-wrap { flex: 1; overflow: hidden; }
+        .site-text {
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--text);
+            white-space: nowrap;
+            overflow-x: auto;
+            padding: 4px 0;
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+            cursor: pointer;
+        }
+        .site-text::-webkit-scrollbar { display: none; }
+        .btn-group-row { display: flex; gap: 6px; flex-shrink: 0; }
+        .edit-icon-btn {
+            width: 40px;
+            height: 40px;
+            border: none;
+            background: transparent;
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+            transition: all 0.22s ease;
+        }
+        .edit-icon:active { background: #f0f1f3; transform: scale(0.92); }
+        .edit-icon-btn img { width: 22px; height: 22px; }
+        .add-float-btn {
+            position: fixed; right: 28px; bottom: 32px; width: 62px; height: 62px;
+            border-radius: 50%; background: var(--primary); color: #fff; font-size: 34px;
+            border: none; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 12px rgba(0,122,255,0.3);
+            transition: all 0.22s ease;
+            z-index: 15;
+        }
+        .add-float-btn:active { transform: scale(0.9); }
+        .sub-page {
+            position: fixed;
+            inset: 0;
+            background: var(--bg);
+            z-index: 20;
+            padding: 16px;
+            opacity: 0;
+            transform: translateX(30px);
+            pointer-events: none;
+            transition: all 0.25s ease;
+            height: 100vh;
+            overflow-y: auto;
+        }
+        .sub-page:not(.hidden) { opacity: 1; transform: translateX(0); pointer-events: auto; }
+        .page-title { font-size: 22px; font-weight: 500; margin: 15px 0 25px; color: var(--text); }
+        .back-btn { margin-bottom: 20px; padding: 12px 16px; background: var(--card); border-radius: 10px; border: none; font-size: 15px; cursor: pointer; text-align: left; color: var(--text); transition: all 0.22s ease; }
+        .back-btn:active { background: #f0f1f3; transform: scale(0.98); }
+        .item-btn { width: 100%; padding: 18px 16px; background: var(--card); border-radius: 10px; margin-bottom: 10px; border: none; text-align: left; font-size: 15px; cursor: pointer; color: var(--text); transition: all 0.22s ease; }
+        .item-btn:active { background: #f0f1f3; transform: scale(0.98); }
+        .status-bar { width: 100%; padding: 18px; background: var(--card); border-radius: 14px; margin-bottom: 20px; text-align: center; font-size: 17px; color: var(--text); }
+        .action-btn { width: 100%; padding: 18px; background: var(--primary); color: #fff; border-radius: 14px; border: none; font-size: 16px; margin-bottom: 15px; cursor: pointer; transition: all 0.22s ease; }
+        .action-btn:active { opacity: 0.97; transform: scale(0.97); }
+        .about-card { background: var(--card); margin: 0 0 12px 0; border-radius: 10px; overflow: hidden; }
+        .about-app-info { text-align: center; padding: 20px 16px; }
+        .about-app-icon { width: 60px; height: 60px; margin: 0 auto 12px; border-radius: 14px; background: url("icon.png") center/contain no-repeat; }
+        .about-app-name { font-size: 21px; font-weight: 500; margin-bottom: 4px; color: var(--text); }
+        .about-version-desc { font-size: 14px; color: var(--text2); }
+        .about-section-title { font-size: 13px; color: var(--text2); padding: 10px 20px 6px; }
+        .about-version-content { padding: 0 20px 14px; font-size: 14px; line-height: 1.65; color: var(--text2); }
+        .icon-select-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .icon-preview {
+            width: 48px;
+            height: 48px;
+            border-radius: 10px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.22s ease;
+        }
+        .icon-preview:active {
+            transform: scale(0.9);
+        }
+        .icon-preview img {
+            width: 32px;
+            height: 32px;
+            object-fit: contain;
+        }
+        .select-icon-btn {
+            flex: 1;
+            height: 48px;
+            border-radius: 12px;
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.22s ease;
+        }
+        .select-icon-btn:active {
+            transform: scale(0.95);
+        }
+        .img-preview-layer {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.9);
+            z-index: 9999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.25s ease;
+        }
+        .img-preview-layer.show {
+            display: flex;
+            opacity: 1;
+        }
+        .preview-full-img {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+            border-radius: 0;
+            user-select: none;
+            touch-action: none;
+            transition: none !important;
+        }
+        .hidden { display: none !important; }
+        /* 内置浏览器样式 */
+        .browser-page{
+            position:fixed;inset:0;background:var(--bg);z-index:25;opacity:0;transform:translateX(30px);pointer-events:none;transition:all 0.25s ease;display:flex;flex-direction:column;
+        }
+        .browser-page:not(.hidden){opacity:1;transform:translateX(0);pointer-events:auto;}
+        .browser-nav{height:50px;background:var(--card);display:flex;align-items:center;padding:0 8px;box-shadow:0 1px 4px rgba(0,0,0,0.06);position:relative;justify-content:space-between;}
+        .browser-left{display:flex;align-items:center;gap:4px;}
+        .browser-right{display:flex;align-items:center;}
+        .browser-iframe{flex:1;border:none;width:100%;background:#fff;}
+        .more-drop{position:absolute;top:52px;right:8px;background:var(--card);border-radius:12px;box-shadow:0 4px 15px rgba(0,0,0,0.15);overflow:hidden;transform:scaleY(0);opacity:0;transform-origin:top right;transition:all 0.22s ease;z-index:99;min-width:130px;}
+        .more-drop.show{transform:scaleY(1);opacity:1;}
+        .drop-item{padding:13px 16px;color:var(--text);font-size:15px;cursor:pointer;transition:0.2s;}
+        .drop-item:active{background:var(--bg);}
+.add-site-pop:not(.show),.edit-site-pop:not(.show){pointer-events:none !important;}
+    </style>
+</head>
+<body>
+<div class="img-preview-layer" id="imgPreviewLayer" onclick="closeFullPreview()">
+    <img src="" id="fullPreviewImg" class="preview-full-img">
+</div>
+<div class="mask-layer hidden" id="globalMask"></div>
+<div class="theme-popup" id="themePopup">
+    <div class="pop-title">选择显示模式</div>
+    <div class="theme-option" onclick="setTheme('auto')">跟随系统</div>
+    <div class="theme-option" onclick="setTheme('light')">浅色模式</div>
+    <div class="theme-option" onclick="setTheme('dark')">深色模式</div>
+    <div class="theme-close" onclick="closeThemePopup()">取消</div>
+</div>
+<div class="add-site-pop" id="addSitePopup">
+    <div class="pop-title">新增收藏网站</div>
+    <input class="input-box" id="siteNameInp" placeholder="收藏名称">
+    <input class="input-box" id="siteUrlInp" placeholder="网站链接">
+    <div class="icon-select-row">
+        <div class="icon-preview">
+            <img src="web.svg" id="addPreviewImg">
+        </div>
+        <button class="select-icon-btn" onclick="triggerAddIconPick()">选择图标</button>
+        <input type="file" id="addIconFile" accept="image/png,image/jpeg,image/jpg,image/svg+xml" hidden>
+    </div>
+    <div class="btn-group">
+        <button class="base-btn btn-gray" onclick="closeAddPopup()">取消</button>
+        <button class="base-btn btn-blue" onclick="confirmAddSite()">确认添加</button>
+    </div>
+</div>
+<div class="edit-site-pop" id="editSitePopup">
+    <div class="pop-title">修改网站信息</div>
+    <input class="input-box" id="editNameInp" placeholder="网站">
+    <input class="input-box" id="editUrlInp" placeholder="链接">
+    <div class="icon-select-row">
+        <div class="icon-preview">
+            <img src="web.svg" id="editPreviewImg">
+        </div>
+        <button class="select-icon-btn" onclick="triggerEditIconPick()">选择图标</button>
+        <input type="file" id="editIconFile" accept="image/png,image/jpeg,image/jpg,image/svg+xml" hidden>
+    </div>
+    <div class="btn-group">
+        <button class="base-btn btn-gray" onclick="closeEditPopup()">取消</button>
+        <button class="base-btn btn-blue" onclick="saveEditSite()">保存修改</button>
+    </div>
+</div>
+<div class="del-site-pop" id="delSitePopup">
+    <div class="pop-title">确认删除</div>
+    <div style="text-align:center; margin-bottom:28px; font-size:15px; color:var(--text2);">确定要删除该收藏吗？</div>
+    <div class="btn-group">
+        <button class="base-btn btn-gray" onclick="closeDelPopup()">取消</button>
+        <button class="base-btn btn-red" onclick="confirmDeleteSite()">确认删除</button>
+    </div>
+</div>
+<div class="pwd-page" id="createPwdPage">
+    <div class="pwd-card">
+        <div class="pwd-title">创建访问密码</div>
+        <input type="password" class="pwd-input" id="pwdCreateInput" placeholder="设置密码">
+        <div class="pwd-btn-group">
+            <button class="pwd-btn pwd-btn-gray" onclick="cancelSetPwd()">取消创建</button>
+            <button class="pwd-btn pwd-btn-blue" onclick="submitCreatePwd()">确认创建</button>
+        </div>
+    </div>
+</div>
+<div class="pwd-page hidden" id="loginPwdPage">
+    <div class="pwd-card">
+        <div class="pwd-title">输入访问密码</div>
+        <input type="password" class="pwd-input" id="pwdLoginInput" placeholder="输入密码解锁">
+        <div class="pwd-btn-group">
+            <button class="pwd-btn pwd-btn-blue" onclick="checkLoginPwd()">确认解锁</button>
+        </div>
+    </div>
+</div>
+<div class="main-page" id="homeMain">
+    <div class="nav-bar">
+        <div class="nav-normal">
+            <button class="icon-btn" onclick="openSettingPage()">
+                <img src="cog.svg" alt="设置">
+            </button>
+            <button class="icon-btn" onclick="toggleSearch()">
+                <img src="magnify.svg" alt="搜索">
+            </button>
+            <div style="flex:1;"></div>
+                <button class="icon-btn" onclick="backToPwdPage()">
+                <img src="lock.svg" alt="返回密码">
+            </button>
+            <button class="icon-btn" onclick="refreshWholePage()">
+                <img src="refresh.svg" alt="刷新">
+            </button>
+        </div>
+        <div class="search-ellipse" id="searchEllipse">
+            <div class="search-icon">
+                <img src="magnify.svg" alt="搜索">
+            </div>
+            <input class="search-input" id="searchInput" placeholder="输入关键词搜索" oninput="doSearch()">
+            <button class="search-close" onclick="toggleSearch()">×</button>
+        </div>
+    </div>
+    <div class="collect-area" id="collectContainer"></div>
+    <button class="add-float-btn" onclick="openAddSitePopup()">+</button>
+</div>
+<!--内置浏览器-->
+<div class="browser-page hidden" id="browserWrap">
+    <div class="browser-nav">
+        <div class="browser-left">
+            <button class="icon-btn" onclick="closeBrowserPage()">
+                <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                </svg>
+            </button>
+        </div>
+        <div class="browser-right">
+            <button class="icon-btn" onclick="toggleMoreMenu()">
+                <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 6c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 6c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"/>
+                </svg>
+            </button>
+        </div>
+        <div class="more-drop" id="browserMoreMenu">
+            <div class="drop-item" onclick="browserRefresh()">刷新页面</div>
+            <div class="drop-item" onclick="browserGoBack()">上一个网站</div>
+            <div class="drop-item" onclick="copyCurrentUrl()">分享(复制链接)</div>
+            <div class="drop-item" onclick="openCurrentOutBrowser()">外部浏览器打开</div>
+        </div>
+    </div>
+    <iframe class="browser-iframe" id="browserIframe" sandbox="allow-same-origin allow-scripts"></iframe>
+</div>
+<div class="sub-page hidden" id="settingPage">
+    <div class="page-title">应用设置</div>
+    <button class="back-btn" onclick="closeSettingPage()">返回主页</button>
+    <button class="item-btn" id="changePwdItem" onclick="openPwdChangePage()">修改登录密码</button>
+    <button class="item-btn" id="cancelPwdItem" onclick="confirmCancelPwd()">取消密码保护</button>
+    <button class="item-btn" onclick="openFullScreenPage()">全屏设置</button>
+    <button class="item-btn" onclick="openThemePanel()">深浅模式</button>
+    <button class="item-btn" onclick="openAboutPage()">关于应用</button>
+    <button class="item-btn" onclick="window.open('使用方法.html')">使用方法</button>
+    <button class="item-btn" onclick="openInBrowser('https://app.nzltw.cn/app/520')">应用下载中心</button>
+    <button class="item-btn" onclick="window.open('https://yuju.99kpk.top:81/pan/784/app-收藏网站库3.0.html')">去看更新</button>
+</div>
+<div class="sub-page hidden" id="aboutPage">
+    <div class="page-title">关于应用</div>
+    <button class="back-btn" onclick="closeAboutPage()">返回设置</button>
+    <div class="about-card">
+        <div class="about-app-info">
+            <div class="about-app-icon"></div>
+            <div class="about-app-name">收藏网站库</div>
+            <div class="about-version-desc">当前版本:3.1</div>
+            <div class="about-version-desc">打包软件:webIDE mt.bzyapp.webapp</div>
+        </div>
+    </div>
+    <div class="about-card">
+        <div class="about-section-title">版本详情</div>
+        <div class="about-version-content">• 修复密码问题<br>• 优化内测浏览器<br></div>
+    </div>
+    <button class="item-btn" onclick="window.open('使用方法.html')">使用方法</button>
+    <button class="item-btn" onclick="window.open('应用说明.html')">应用说明</button>
+    <button class="item-btn" onclick="openInBrowser('https://yuju.99kpk.top:81/pan/784/index.html')">官网(推荐)</button>
+    <button class="item-btn" onclick="openInBrowser('http://125ax1107os10.vicp.fun/')">官网</button>
+    <div class="about-card">
+        <div class="about-app-info">
+            <div class="about-app-name">友情链接</div>
+            <button class="item-btn" onclick="openInBrowser('https://app.nzltw.cn/app/505')">VisioDroidStudio</button>
+            <button class="item-btn" onclick="openInBrowser('https://pgyer.com/bzyapp')">WebIDE</button>
+            <button class="item-btn" onclick="openInBrowser('https://yuju.99kpk.top:81')">云居后台</button>
+        </div>
+    </div>
+    <a href="mailto:lix201206@qq.com" target="_blank">反馈与意见</a>
+</div>
+<div class="sub-page hidden" id="pwdChangePage">
+    <div class="page-title">修改密码</div>
+    <button class="back-btn" onclick="backToSetting()">返回设置</button>
+    <div class="page-title" id="pwdPageTitle">修改登录密码</div>
+    <input class="input-box hidden" id="oldPwdInput" placeholder="输入原有密码">
+    <input class="input-box" id="newPwdInput" placeholder="设置新密码">
+    <div class="btn-group">
+        <button class="base-btn btn-gray" onclick="backToSetting()">取消</button>
+        <button class="base-btn btn-blue" onclick="confirmEditPwd()">确认修改</button>
+    </div>
+</div>
+<div class="sub-page hidden" id="fullScreenPage">
+    <div class="page-title">全屏设置</div>
+    <button class="back-btn" onclick="closeFullScreenPage()">返回设置</button>
+    <div class="status-bar" id="screenStatus">检测窗口状态中...</div>
+    <button class="action-btn" onclick="toggleFullScreenMode()" id="fullToggleBtn">进入全屏模式</button>
+</div>
+<script>
+//返回密码页函数
+function backToPwdPage(){
+    document.getElementById('homeMain').style.display='none';
+    if(localPassword=='no_lock'){
+        document.getElementById('createPwdPage').classList.remove('hidden');
+    }else{
+        document.getElementById('loginPwdPage').classList.remove('hidden');
+    }
+}
+//浏览器全局变量
+let browserUrl = "";
+let historyUrlList = [];
+function initSysBack() {
+  history.pushState({}, "", "");
+  window.addEventListener("popstate", function() {
+    if (document.getElementById("imgPreviewLayer").classList.contains("show")) {
+      closeFullPreview();
+    } else if (document.getElementById("searchEllipse").classList.contains("show")) {
+      toggleSearch();
+    } else if (document.querySelector(".add-site-pop.show,.edit-site-pop.show,.del-site-pop.show,.theme-popup.show")) {
+      closeMask(); closeAddPopup(); closeEditPopup(); closeDelPopup(); closeThemePopup();
+    } else if(!document.getElementById("browserWrap").classList.contains("hidden")){
+        if(historyUrlList.length>1){
+            historyUrlList.pop();
+            let prev = historyUrlList[historyUrlList.length-1];
+            browserUrl=prev;
+            document.getElementById("browserIframe").src=prev;
+            history.pushState({}, "", "");
+        }else{
+            closeBrowserPage();
+        }
+    } else {
+      document.getElementById("settingPage").classList.add("hidden");
+      document.getElementById("aboutPage").classList.add("hidden");
+      document.getElementById("pwdChangePage").classList.add("hidden");
+      document.getElementById("fullScreenPage").classList.add("hidden");
+    }
+    history.pushState({}, "", "");
+  });
+}
+function confirmCancelPwd() {
+  if (!confirm("确定要取消密码保护吗？取消后无需密码直接进入")) return;
+  localStorage.setItem(storageKey, "no_lock");
+  localPassword = "no_lock";
+  refreshSettingMenu();
+  backToSetting();
+}
+let tempAddIcon = "web.svg";
+let tempEditIcon = "web.svg";
+let currentEditIndex = 0;
+let currentDelIndex = 0;
+let collectList = JSON.parse(localStorage.getItem("siteCollectList")) || [];
+function openEditSite(index) {
+  currentEditIndex = index;
+  let data = collectList[index];
+  document.getElementById("editNameInp").value = data.name;
+  document.getElementById("editUrlInp").value = data.url;
+  tempEditIcon = data.icon || "web.svg";
+  document.getElementById("editPreviewImg").src = tempEditIcon;
+  openMask();
+  document.getElementById("editSitePopup").classList.add("show");
+}
+//内置浏览器打开链接
+function openInBrowser(url){
+    if(!/^https?:\/\//.test(url)){
+        alert("链接格式错误");
+        return;
+    }
+    browserUrl = url;
+    historyUrlList.push(url);
+    const iframe = document.getElementById("browserIframe");
+    iframe.onerror = function(){
+        alert("当前网站禁止iframe内嵌渲染，请在右上角三点菜单使用【外部浏览器打开】");
+    }
+    iframe.src = url;
+    document.getElementById("browserWrap").classList.remove("hidden");
+    document.getElementById("browserMoreMenu").classList.remove("show");
+    history.pushState({}, "", "");
+}
+//关闭浏览器
+function closeBrowserPage(){
+    document.getElementById("browserWrap").classList.add("hidden");
+    document.getElementById("browserMoreMenu").classList.remove("show");
+}
+//三点菜单开关
+function toggleMoreMenu(){
+    document.getElementById("browserMoreMenu").classList.toggle("show");
+}
+//浏览器刷新
+function browserRefresh(){
+    document.getElementById("browserIframe").src = browserUrl;
+    document.getElementById("browserMoreMenu").classList.remove("show");
+}
+//上一页
+function browserGoBack(){
+    if(historyUrlList.length<=1){
+        alert("没有上一个网站记录");
+        return;
+    }
+    historyUrlList.pop();
+    let prev = historyUrlList[historyUrlList.length-1];
+    browserUrl = prev;
+    document.getElementById("browserIframe").src = prev;
+    document.getElementById("browserMoreMenu").classList.remove("show");
+    history.pushState({}, "", "");
+}
+//复制链接分享
+async function copyCurrentUrl(){
+    try{
+        await navigator.clipboard.writeText(browserUrl);
+        alert("链接复制成功，可分享");
+    }catch(e){
+        alert("复制失败："+browserUrl);
+    }
+    document.getElementById("browserMoreMenu").classList.remove("show");
+}
+//外部浏览器直接打开
+function openCurrentOutBrowser(){
+    openInExternalBrowser(browserUrl);
+    document.getElementById("browserMoreMenu").classList.remove("show");
+}
+function openInExternalBrowser(url) {
+  if (!url || !/^https?:\/\//.test(url)) return;
+  try {
+    const intent = `intent://${url.replace(/^https?:\/\//, '')}#Intent;scheme=http;action=android.intent.action.VIEW;end;`;
+    location.href = intent;
+  } catch (e) {}
+  setTimeout(() => {
+    const a = document.createElement('a');
+    a.href = url; a.target = '_blank'; a.rel = 'noopener noreferrer';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  }, 20);
+}
+function openMask(){document.getElementById('globalMask').classList.remove('hidden');history.pushState({}, "", "");}
+function closeMask(){document.getElementById('globalMask').classList.add('hidden');history.pushState({}, "", "");}
+function openThemePanel(){openMask();document.getElementById('themePopup').classList.add('show');}
+function closeThemePopup(){closeMask();document.getElementById('themePopup').classList.remove('show');}
+function setTheme(theme){document.documentElement.setAttribute('data-theme',theme);localStorage.setItem('themeMode',theme);closeThemePopup();}
+function loadTheme(){const saved=localStorage.getItem('themeMode')||'auto';document.documentElement.setAttribute('data-theme',saved);}
+function triggerAddIconPick(){document.getElementById('addIconFile').click();}
+function triggerEditIconPick(){document.getElementById('editIconFile').click();}
+document.getElementById('addIconFile').onchange=function(e){const file=e.target.files[0];if(!file)return;const allow=['image/png','image/jpeg','image/jpg','image/svg+xml'];if(!allow.includes(file.type)){alert('仅支持PNG/JPG/JPEG/SVG');this.value='';return;}const reader=new FileReader();reader.readAsDataURL(file);reader.onload=function(){tempAddIcon=this.result;document.getElementById('addPreviewImg').src=tempAddIcon;};};
+document.getElementById('editIconFile').onchange=function(e){const file=e.target.files[0];if(!file)return;const allow=['image/png','image/jpeg','image/jpg','image/svg+xml'];if(!allow.includes(file.type)){alert('仅支持PNG/JPG/JPEG/SVG');this.value='';return;}const reader=new FileReader();reader.readAsDataURL(file);reader.onload=function(){tempEditIcon=this.result;document.getElementById('editPreviewImg').src=tempEditIcon;};};
+function openAddSitePopup(){openMask();document.getElementById('addSitePopup').classList.add('show');document.getElementById('siteNameInp').value='';document.getElementById('siteUrlInp').value='';tempAddIcon='web.svg';document.getElementById('addPreviewImg').src=tempAddIcon;}
+function closeAddPopup(){closeMask();document.getElementById('addSitePopup').classList.remove('show');}
+function closeEditPopup(){closeMask();document.getElementById('editSitePopup').classList.remove('show');}
+function openDelSite(index){currentDelIndex=index;openMask();document.getElementById('delSitePopup').classList.add('show');}
+function closeDelPopup(){closeMask();document.getElementById('delSitePopup').classList.remove('show');}
+document.oncontextmenu=()=>false;document.oncopy=()=>false;
+const storageKey="collectLockPassword";const fullScreenKey="autoFullScreenEnabled";
+let localPassword=localStorage.getItem(storageKey);
+function toggleSearch(){const e=document.getElementById('searchEllipse');e.classList.toggle('show');if(!e.classList.contains('show')){document.getElementById('searchInput').value='';renderAllCollect();}else{document.getElementById('searchInput').focus();history.pushState({}, "", "");}}
+//搜索
+function doSearch(){
+    const k=document.getElementById('searchInput').value.trim().toLowerCase();
+    const c=document.getElementById('collectContainer');
+    c.innerHTML='';
+    if(!k){
+        renderAllCollect();
+        return;
+    }
+    let findCount=0;
+    collectList.forEach((it,i)=>{
+        if(it.name.toLowerCase().includes(k)){
+            createSiteItem(it.name,it.url,i,it.icon);
+            findCount++;
+        }
+    });
+    if(findCount===0){
+        c.innerHTML = `<div style="text-align:center;padding:40px;color:var(--text2);">没有搜索到相关名称</div>`;
+    }
+}
+window.onload=function(){
+  loadTheme();
+  initSysBack();
+  const create=document.getElementById('createPwdPage');
+  const login=document.getElementById('loginPwdPage');
+  if(localPassword===null){create.classList.remove('hidden');}
+  else if(localPassword==='no_lock'){create.classList.add('hidden');login.classList.add('hidden');homeMain.style.display='block';renderAllCollect();}
+  else{create.classList.add('hidden');login.classList.remove('hidden');}
+  refreshSettingMenu();
+  autoLoadFullScreen();
+};
+function renderAllCollect(){const c=document.getElementById('collectContainer');c.innerHTML='';collectList.forEach((it,i)=>{createSiteItem(it.name,it.url,i,it.icon);});}
+function saveCollectData(){localStorage.setItem('siteCollectList',JSON.stringify(collectList));}
+function createSiteItem(name,url,index,icon){
+  const box=document.getElementById('collectContainer');
+  const item=document.createElement('div');
+  item.className='site-item';
+  item.innerHTML=`<img class="site-icon" src="${icon||'web.svg'}"><div class="text-scroll-wrap"><div class="site-text" onclick="openInBrowser('${url}')">${name}</div></div><div class="btn-group-row"><button class="icon-btn" onclick="openInExternalBrowser('${url}')"><img src="web.svg"></button><button class="icon-btn" onclick="openEditSite(${index})"><img src="pencil.svg"></button><button class="icon-btn" onclick="openDelSite(${index})"><img src="delete.svg"></button></div>`;
+  box.appendChild(item);
+}
+function previewTempAddIcon(){}
+function previewTempEditIcon(){}
+function closeFullPreview(){document.getElementById('imgPreviewLayer').classList.remove('show');}
+function openAboutPage(){document.getElementById('settingPage').classList.add('hidden');document.getElementById('aboutPage').classList.remove('hidden');history.pushState({}, "", "");}
+function closeAboutPage(){document.getElementById('aboutPage').classList.add('hidden');document.getElementById('settingPage').classList.remove('hidden');}
+function openSettingPage(){document.getElementById('settingPage').classList.remove('hidden');refreshSettingMenu();history.pushState({}, "", "");}
+function closeSettingPage(){document.getElementById('settingPage').classList.add('hidden');history.pushState({}, "", "");}
+function openPwdChangePage(){
+  document.getElementById('oldPwdInput').value='';
+  document.getElementById('newPwdInput').value='';
+  localPassword = localStorage.getItem(storageKey);
+  if(localPassword==='no_lock'){
+    document.getElementById('pwdPageTitle').innerText='创建访问密码';
+    document.getElementById('oldPwdInput').classList.add('hidden');
+  }else{
+    document.getElementById('pwdPageTitle').innerText='修改登录密码';
+    document.getElementById('oldPwdInput').classList.remove('hidden');
+  }
+  document.getElementById('settingPage').classList.add('hidden');
+  document.getElementById('pwdChangePage').classList.remove('hidden');
+  history.pushState({}, "", "");
+}
+function backToSetting(){
+  document.getElementById('pwdChangePage').classList.add('hidden');
+  document.getElementById('fullScreenPage').classList.add('hidden');
+  document.getElementById('settingPage').classList.remove('hidden');
+  refreshSettingMenu();history.pushState({}, "", "");
+}
+function openFullScreenPage(){document.getElementById('settingPage').classList.add('hidden');document.getElementById('fullScreenPage').classList.remove('hidden');checkScreenState();history.pushState({}, "", "");}
+function closeFullScreenPage(){document.getElementById('fullScreenPage').classList.add('hidden');document.getElementById('settingPage').classList.remove('hidden');history.pushState({}, "", "");}
+function autoLoadFullScreen(){if(localStorage.getItem(fullScreenKey)==='true'){setTimeout(()=>{if(!document.fullscreenElement)document.documentElement.requestFullscreen();},300);}}
+function checkScreenState(){const f=!!document.fullscreenElement;document.getElementById('screenStatus').innerText=f?'当前状态:已全屏':'当前状态:半全屏';document.getElementById('fullToggleBtn').innerText=f?'退出全屏':'进入全屏';}
+function toggleFullScreenMode(){if(document.fullscreenElement){document.exitFullscreen();localStorage.setItem(fullScreenKey,'false');}else{document.documentElement.requestFullscreen();localStorage.setItem(fullScreenKey,'true');}setTimeout(checkScreenState,30);}
+function refreshSettingMenu(){
+  const change=document.getElementById('changePwdItem');
+  const cancel=document.getElementById('cancelPwdItem');
+  localPassword = localStorage.getItem(storageKey);
+  if(localPassword==='no_lock'){
+    change.innerText = "创建访问密码";
+    cancel.classList.add('hidden');
+  }else{
+    change.innerText = "修改登录密码";
+    cancel.classList.remove('hidden');
+  }
+}
+function submitCreatePwd(){const v=document.getElementById('pwdCreateInput').value.trim();if(!v){alert('密码不能为空');return;}localStorage.setItem(storageKey,v);localPassword=v;alert('创建成功');location.reload();}
+//【最终正确】取消创建=永久免密进首页，下次不开创建页
+function cancelSetPwd(){
+    localStorage.setItem(storageKey,"no_lock");
+    localPassword="no_lock";
+    document.getElementById('createPwdPage').classList.add('hidden');
+    document.getElementById('pwdCreateInput').value='';
+    document.getElementById('homeMain').style.display='block';
+    renderAllCollect();
+}
+function checkLoginPwd(){if(localPassword==='no_lock'){document.getElementById('loginPwdPage').classList.add('hidden');document.getElementById('homeMain').style.display='block';renderAllCollect();return;}const v=document.getElementById('pwdLoginInput').value.trim();if(v===localPassword){document.getElementById('loginPwdPage').classList.add('hidden');document.getElementById('homeMain').style.display='block';renderAllCollect();}else{alert('密码错误');document.getElementById('pwdLoginInput').value='';}}
+function confirmEditPwd(){const old=document.getElementById('oldPwdInput').value.trim();const neu=document.getElementById('newPwdInput').value.trim();if(!neu){alert('新密码不能为空');return;}if(localPassword==='no_lock'){localStorage.setItem(storageKey,neu);localPassword=neu;alert('创建成功');backToSetting();return;}if(old!==localPassword){alert('原密码错误');return;}localStorage.setItem(storageKey,neu);localPassword=neu;alert('修改成功');backToSetting();}
+function confirmAddSite(){const n=document.getElementById('siteNameInp').value.trim();const u=document.getElementById('siteUrlInp').value.trim();if(!n||!u){alert('名称和链接不能为空');return;}collectList.push({name:n,url:u,icon:tempAddIcon});saveCollectData();renderAllCollect();closeAddPopup();}
+function saveEditSite(){const n=document.getElementById('editNameInp').value.trim();const u=document.getElementById('editUrlInp').value.trim();if(!n||!u){alert('不能为空');return;}collectList[currentEditIndex].name=n;collectList[currentEditIndex].url=u;collectList[currentEditIndex].icon=tempEditIcon;saveCollectData();renderAllCollect();closeEditPopup();}
+function confirmDeleteSite(){collectList.splice(currentDelIndex,1);saveCollectData();renderAllCollect();closeDelPopup();}
+//只刷新列表，无弹窗
+function refreshWholePage(){
+    renderAllCollect();
+}
+</script>
+</body>
+</html>
