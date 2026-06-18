@@ -1,0 +1,125 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Arial", "微软雅黑", sans-serif;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+            padding: 15px;
+            font-size: 14px;
+        }
+        
+        .container {
+            width: 100%;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 22px;
+        }
+        
+        .browser-group {
+            background: white;
+            border-radius: 20px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        .browser-title {
+            color: #2d3748;
+            font-size: 18px;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 0.1px solid #000;
+        }
+        /* 完全保留你原有的按钮样式，未做任何修改 */
+        
+        button {
+            padding: 10px 20px;
+            margin: 10px;
+            border: none;
+            border-radius: 8px;
+            /* 圆角效果 */
+        }
+        
+        .game-btn {
+            display: inline-block;
+            padding: 12px 24px;
+            margin: 8px;
+            background: #4299e1;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+            text-decoration: none;
+        }
+        
+        .game-btn:hover {
+            background: #3182ce;
+        }
+        
+        .game-desc {
+            font-size: 14px;
+            color: #666;
+            margin: 5px 0 15px 10px;
+        }
+        
+        .info-item {
+            margin: 8px 0;
+            line-height: 1.6;
+            word-break: break-all;
+            /* 长文本自动换行 */
+        }
+        /* 图片适配：完整显示，不裁剪 */
+        
+        .show-img {
+            max-width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="browser-group">
+            <h1 class="browser-title">使用方法</h1>
+            <p></p>
+            <p>1. + 在新增收藏网站时(请带http://或https://协议或其他)</p>
+            <img src="png/1.jpg" class="show-img" alt="照片">
+            <p>2.点击收藏网站模块即可进入</p>
+            <img src="png/2.png" class="show-img" alt="照片">
+            <br>3.点击刷新按钮<img src="refresh.svg" class="show-img" alt="照片">刷新主页<br>
+            <img src="png/3.jpg" class="show-img" alt="照片">
+            <p></p>
+            <h1 class="browser-title">收藏网站库按钮</h1>
+            <p>退回输入密码页面</p>
+            <img src="lock.svg" class="show-img" alt="照片">
+            <p>搜索(搜索内容“网站名称”)</p>
+            <img src="magnify.svg" class="show-img" alt="照片">
+            <p>打开外部浏览器</p>
+            <img src="web.svg" class="show-img" alt="照片">
+            <p>修改</p>
+            <img src="pencil.svg" class="show-img" alt="照片">
+            <p>删除</p>
+            <img src="delete.svg" class="show-img" alt="照片">
+        </div>
+    </div>
+</body>
+
+</html>
