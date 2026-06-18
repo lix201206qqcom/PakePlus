@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>关于</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: system-ui, -apple-system, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+            color: #212121;
+        }
+        /* 顶部导航栏 */
+        
+        .header {
+            height: 48px;
+            background: #fff;
+            border-bottom: 1px solid #e0e0e0;
+            position: relative;
+            width: 100%;
+        }
+        /* 返回箭头按钮 */
+        
+        .back-btn {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 20px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #212121;
+            transition: all 0.2s ease;
+            z-index: 2;
+        }
+        
+        .back-btn:active {
+            opacity: 0.5;
+            transform: translateY(-50%) scale(0.95);
+        }
+        /* 标题百分百居中 */
+        
+        .title {
+            position: absolute;
+            width: 100%;
+            top: 50%;
+            transform: translateY(-50%);
+            text-align: center;
+            font-weight: 500;
+        }
+        /* 通用卡片模块 */
+        
+        .card {
+            background: #ffffff;
+            margin: 14px 16px;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        /* 应用信息区域 */
+        
+        .app-info {
+            text-align: center;
+            padding: 20px 16px;
+        }
+        /* 软件图标，同目录icon.png自动读取 */
+        
+        .app-icon {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 12px;
+            border-radius: 14px;
+            background: url("icon.png") center/contain no-repeat;
+        }
+        
+        .app-name {
+            font-size: 21px;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+        
+        .version-desc {
+            font-size: 14px;
+            color: #757575;
+        }
+        /* 板块小标题 */
+        
+        .section-title {
+            font-size: 13px;
+            color: #616161;
+            padding: 10px 20px 6px;
+        }
+        /* 版本详情内容 */
+        
+        .version-content {
+            padding: 0 20px 14px;
+            font-size: 14px;
+            line-height: 1.65;
+            color: #424242;
+        }
+        
+        .version-content p {
+            margin: 5px 0;
+        }
+        /* 页面按钮样式 */
+        
+        .func-btn {
+            width: 100%;
+            padding: 14px 20px;
+            font-size: 15px;
+            color: #212121;
+            text-align: left;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        
+        .func-btn:active {
+            background-color: #f0f0f0;
+        }
+        
+        .bottom-space {
+            height: 35px;
+        }
+    </style>
+</head>
+<!-- 已废弃 -->
+<body oncontextmenu="return false;">
+    <div class="header">
+        <!-- 左箭头点击返回上一页 -->
+        <button class="back-btn" onclick="history.back()">&lt;</button>
+        <div class="title">关于</div>
+    </div>
+    <!-- 应用信息卡片 -->
+    <div class="card">
+        <div class="app-info">
+            <div class="app-icon"></div>
+            <div class="app-name">收藏网站库</div>
+            <div class="version-desc">当前版本:</div>
+        </div>
+    </div>
+    <!-- 版本详情卡片 -->
+    <div class="card">
+        <div class="section-title">版本详情</div>
+        <div class="version-content">
+            <p>• 优化app</p>
+        </div>
+    </div>
+    <!-- 使用方法按钮 -->
+    <div class="card">
+        <button class="func-btn">使用方法</button>
+    </div>
+    <div class="bottom-space"></div>
+    <script>
+        // 禁用右键、文字复制
+        document.oncontextmenu = function() {
+            return false;
+        }
+        document.onselectstart = function() {
+            return false;
+        }
+    </script>
+</body>
+
+</html>
