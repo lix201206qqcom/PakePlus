@@ -609,6 +609,9 @@
                 <img src="magnify.svg" alt="搜索">
             </button>
             <div style="flex:1;"></div>
+    <button class="icon-btn" onclick="openInBrowser('https://yuju.99kpk.top:81/pan/887/%E6%94%B6%E8%97%8F%E7%BD%91%E7%AB%99%E5%BA%93.html')">
+                <img src="arrow-down-bold-circle-outline.svg" alt="刷新">
+            </button>
             <button class="icon-btn" onclick="backToPwdPage()">
                 <img src="lock.svg" alt="返回密码">
             </button>
@@ -648,7 +651,7 @@
         <div class="more-drop" id="browserMoreMenu">
             <div class="drop-item" onclick="browserRefresh()">刷新页面</div>
             <div class="drop-item" onclick="copyCurrentUrl()">分享(复制链接)</div>
-            <div class="drop-item" onclick="openCurrentOutBrowser()">外部浏览器打开</div>
+            <div class="drop-item" onclick="openCurrentOutBrowser()">浏览器打开</div>
         </div>
     </div>
     <iframe class="browser-iframe" id="browserIframe" sandbox="allow-same-origin allow-scripts"></iframe>
@@ -763,84 +766,6 @@
         </div>
     </div>
 <script>
-// 版本更新 
-(function() {
-    // 配置参数
-    const UPDATE_USER = "3211488647";
-    const UPDATE_APPID = "890";
-    const UPDATE_API_URL = "https://yuju.99kpk.top:81/api/update_obtain.php";
-
-    // 延迟1秒执行，等待页面DOM、原有JS全部加载完毕
-    setTimeout(function() {
-        // 获取元素，不存在则直接退出，防止报错
-        const updateMask = document.getElementById("updateMask");
-        const updateEdition = document.getElementById("updateEdition");
-        const updateContent = document.getElementById("updateContent");
-        const updateCancel = document.getElementById("updateCancel");
-        const updateOk = document.getElementById("updateOk");
-
-        if (!updateMask || !updateCancel || !updateOk) {
-            return;
-        }
-
-        let downLink = "";
-
-        // 关闭按钮
-        updateCancel.onclick = function() {
-            updateMask.style.display = "none";
-        };
-
-        // 点击遮罩关闭
-        updateMask.onclick = function(e) {
-            if (e.target === updateMask) {
-                updateMask.style.display = "none";
-            }
-        };
-
-        // 下载按钮
-        updateOk.onclick = function() {
-            if (downLink) {
-                window.open(downLink, "_blank");
-            } else {
-                alert("暂无下载地址");
-            }
-        };
-
-        // 接口检测（传统XHR 全浏览器兼容）
-        function checkUpdate() {
-            const reqUrl = UPDATE_API_URL + "?user=" + UPDATE_USER + "&appid=" + UPDATE_APPID;
-            const xhr = new XMLHttpRequest();
-            xhr.open("GET", reqUrl, true);
-            xhr.timeout = 5000; // 5秒超时，卡住自动终止
-            xhr.ontimeout = function() {};
-
-            xhr.onreadystatechange = function() {
-                if (xhr.readyState === 4) {
-                    if (xhr.status === 200) {
-                        try {
-                            const res = JSON.parse(xhr.responseText);
-                            // 有新版本
-                            if (res.code === "1") {
-                                // edition = no 不弹窗
-                                if (res.edition === "no") {
-                                    return;
-                                }
-                                updateEdition.innerText = "最新版本：" + res.edition;
-                                updateContent.innerText = res.content;
-                                downLink = res.link || "";
-                                updateMask.style.display = "flex";
-                            }
-                        } catch (err) {}
-                    }
-                }
-            };
-            xhr.send();
-        }
-
-        // 执行检测
-        checkUpdate();
-    }, 1000);
-})();
 // 彩蛋功能：头像三击跳转
 let eggNum = 0;
 let eggTimer = null;
